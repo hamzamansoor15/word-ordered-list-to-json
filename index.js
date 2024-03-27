@@ -1,0 +1,157 @@
+const mammoth = require("mammoth");
+const XLSX = require("xlsx");
+const { JSDOM } = require("jsdom");
+
+//#region MAIN
+async function convertWordOrderedListToJson(inputDoc, outputDoc) {
+  try {
+    //* convert the input docx to html
+    const html = await mammoth.convertToHtml({ path: inputDoc });
+
+    //* creating the json using the html
+    const json = generateJson(html.value);
+    console.log("tables", json);
+
+    let formatData = json.map((item) => {
+      console.log("item", item.title);
+      return [
+        "MC",
+        "5",
+        item.title,
+        ...item.options.map((option, index) => {
+          let opt = option;
+          if (item.correctOption == option, item.correctOptionIndex === index) {
+            opt = "*" + option;
+          }
+          return opt;
+        }),
+      ];
+    });
+    header = [
+      "//Question Type",
+      "//Points",
+      "	//Question Text",
+      "//Answer Choice 1",
+      "//Answer Choice 2",
+      "//Answer Choice 3",
+      "//Answer Choice 4",
+      "//Answer Choice 5",
+      "//Answer Choice 6",
+      "//Answer Choice 7",
+      "	//Answer Choice 8",
+      "//Answer Choice 9",
+      "//Answer Choice 10",
+    ]; 
+
+    console.log("format", formatData);
+    formatData.unshift(header);
+
+    //* Generate a new file containing sheet called 'Questions'
+    const workbook = XLSX.utils.book_new();
+    const sheet = XLSX.utils.aoa_to_sheet(formatData);
+    XLSX.utils.book_append_sheet(workbook, sheet, `Questions`);
+
+    XLSX.writeFile(workbook, outputDoc);
+    console.log("Success!");
+
+
+  } catch (error) {
+    console.error("Error: ", error);
+  }
+}
+
+
+//* Use JSDOM to find all ordered list ol in the html output
+//* Param: html from the back file generated via mammonth 
+//* return Json
+function generateJson(html) {
+
+  const response = [];
+  const updatedHtml = html.replace('<ol>','<ol id="list">');
+  // console.log(updatedHtml);
+  
+  // creating dom object
+  const dom = new JSDOM(`<!DOCTYPE html><body>${updatedHtml}</body></html>`);
+  // console.log("html", dom);
+
+  // getting the document from the dom object
+  const document = dom.window.document;
+  
+  // selecting the list by id and fetching all the line items (li) in it an iteratable list
+  const parent = document.getElementById("list");
+  const orderedList = parent.querySelectorAll("#list>li");
+  // console.log(orderedList);
+
+  console.log('HTMLLiElement: ', JSON.stringify(orderedList)); 
+
+  // Iterating over the orderedlist (questions)
+  orderedList.forEach((listOptions, tableIndex) => {
+    // console.log("listOptions:", listOptions.firstChild.textContent,tableIndex);
+    // listOptions.querySelectorAll('li');
+
+    const question = listOptions.firstChild.textContent;
+    let options = []; // Array of Question options
+    let correctOption = null; // Correction option string
+    let correctOptionIndex = null; // correct option array index
+
+    // Iterating over the question options
+    listOptions.querySelectorAll('li').forEach((item, index) =>{
+        // Check if the question option is bold or not
+        // Bold means it is the correct option
+        // setting the correction option and its array index
+        isBold = isOptionBold(item);
+        if(isBold) {
+          correctOption = item.textContent;
+          correctOptionIndex = index;
+
+        };
+        // console.log("isBold", isBold);
+        // console.log("item:", item.textContent);
+        // appending the question options in an array
+        options.push(item.textContent);
+
+    })
+    
+    // Appending the question, its options and correct response to an array of jsons
+    response.push({
+      title: question,
+      options: options,
+      correctOption: correctOption,
+      correctOptionIndex: correctOptionIndex
+    });
+    
+  });
+
+  // console.log("response",response)
+  return response;
+}
+
+// Checking if the question option is bold or not
+function isOptionBold(item) {
+
+  // console.log("item.nodeType",item.nodeType);
+
+  //https://www.w3schools.com/jsref/prop_node_nodetype.asp
+  // If the node is an element node, the nodeType property will return 1.
+  // Check if the option is of node type (not text type)
+  if(item.nodeType === 1){
+    // Check if the child option is also of node type (not text type)
+  if(item.firstChild.nodeType === 1){
+      // console.log("sel.firstChild",item.firstChild.tagName);
+
+    // item.firstChild.tagName
+    var tag = item.firstChild.tagName.toLowerCase();
+    return ["strong", "b"].some((boldTag) => boldTag == tag)
+  }
+  }
+  return false;
+
+}
+
+//* Location of your input docx
+//* Location of your output xlsx
+const inputPath = "example.docx";
+const outputPath = "example.xlsx";
+
+convertWordOrderedListToJson(inputPath, outputPath);
+//! Run this from command line using `node index.js`
