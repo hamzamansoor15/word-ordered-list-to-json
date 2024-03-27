@@ -2,11 +2,14 @@
 Give word document as input, extract ordered list and get json as output
 
 # Pre requsites
-Install Nodejs
+- Install Nodejs
+- https://nodejs.org/en/download
 
+# Installation
 Run the following command to install the project dependencies
+- npm i
 
-Run the project
-Rname the source file to example.docx
-Rin "node index.js"
-Outfile will be in excel 
+In order to run the project
+- Rname the source file to example.docx
+- Run "node index.js"
+- Outfile will be in example.xlsx 
