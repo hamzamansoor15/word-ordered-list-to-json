@@ -15,5 +15,10 @@
   "bugs": {
     "url": "https://github.com/hamzamansoor15/word-ordered-list-to-json/issues"
   },
-  "homepage": "https://github.com/hamzamansoor15/word-ordered-list-to-json#readme"
+  "homepage": "https://github.com/hamzamansoor15/word-ordered-list-to-json#readme",
+  "dependencies": {
+    "jsdom": "^24.0.0",
+    "mammoth": "^1.7.1",
+    "xlsx": "^0.18.5"
+  }
 }
