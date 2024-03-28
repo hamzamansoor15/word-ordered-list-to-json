@@ -10,116 +10,165 @@ async function convertWordOrderedListToJson(inputDoc, outputDoc) {
 
     //* creating the json using the html
     const json = generateJson(html.value);
-    console.log("tables", json);
+    // console.log("tables", json);
 
-    let formatData = json.map((item) => {
-      console.log("item", item.title);
-      return [
-        "MC",
-        "5",
-        item.title,
-        ...item.options.map((option, index) => {
-          let opt = option;
-          if (item.correctOption == option, item.correctOptionIndex === index) {
-            opt = "*" + option;
-          }
-          return opt;
-        }),
-      ];
-    });
-    header = [
-      "//Question Type",
-      "//Points",
-      "	//Question Text",
-      "//Answer Choice 1",
-      "//Answer Choice 2",
-      "//Answer Choice 3",
-      "//Answer Choice 4",
-      "//Answer Choice 5",
-      "//Answer Choice 6",
-      "//Answer Choice 7",
-      "	//Answer Choice 8",
-      "//Answer Choice 9",
-      "//Answer Choice 10",
-    ]; 
+    // let formatData = json.map((item) => {
+    //   console.log("item", item.title);
+    //   return [
+    //     "MC",
+    //     "5",
+    //     item.title,
+    //     ...item.options.map((option, index) => {
+    //       let opt = option;
+    //       if (
+    //         (item.correctOption == option, item.correctOptionIndex === index)
+    //       ) {
+    //         opt = "*" + option;
+    //       }
+    //       return opt;
+    //     }),
+    //   ];
+    // });
+    // header = [
+    //   "//Question Type",
+    //   "//Points",
+    //   "	//Question Text",
+    //   "//Answer Choice 1",
+    //   "//Answer Choice 2",
+    //   "//Answer Choice 3",
+    //   "//Answer Choice 4",
+    //   "//Answer Choice 5",
+    //   "//Answer Choice 6",
+    //   "//Answer Choice 7",
+    //   "	//Answer Choice 8",
+    //   "//Answer Choice 9",
+    //   "//Answer Choice 10",
+    // ];
 
-    console.log("format", formatData);
-    formatData.unshift(header);
+    // console.log("format", formatData);
+    // formatData.unshift(header);
 
-    //* Generate a new file containing sheet called 'Questions'
-    const workbook = XLSX.utils.book_new();
-    const sheet = XLSX.utils.aoa_to_sheet(formatData);
-    XLSX.utils.book_append_sheet(workbook, sheet, `Questions`);
+    // //* Generate a new file containing sheet called 'Questions'
+    // const workbook = XLSX.utils.book_new();
+    // const sheet = XLSX.utils.aoa_to_sheet(formatData);
+    // XLSX.utils.book_append_sheet(workbook, sheet, `Questions`);
 
-    XLSX.writeFile(workbook, outputDoc);
-    console.log("Success!");
-
-
+    // XLSX.writeFile(workbook, outputDoc);
+    // console.log("Success!");
   } catch (error) {
     console.error("Error: ", error);
   }
 }
 
-
 //* Use JSDOM to find all ordered list ol in the html output
-//* Param: html from the back file generated via mammonth 
+//* Param: html from the back file generated via mammonth
 //* return Json
 function generateJson(html) {
-
   const response = [];
-  const updatedHtml = html.replace('<ol>','<ol id="list">');
-  // console.log(updatedHtml);
-  
+  const updatedHtml = html.replace("<ol>", '<ol id="list">');
+  console.log(updatedHtml);
+
   // creating dom object
   const dom = new JSDOM(`<!DOCTYPE html><body>${updatedHtml}</body></html>`);
   // console.log("html", dom);
 
   // getting the document from the dom object
   const document = dom.window.document;
-  
+
   // selecting the list by id and fetching all the line items (li) in it an iteratable list
   const parent = document.getElementById("list");
   const orderedList = parent.querySelectorAll("#list>li");
   // console.log(orderedList);
 
-  console.log('HTMLLiElement: ', JSON.stringify(orderedList)); 
+  // console.log("HTMLLiElement: ", JSON.stringify(orderedList));
 
   // Iterating over the orderedlist (questions)
   orderedList.forEach((listOptions, tableIndex) => {
-    // console.log("listOptions:", listOptions.firstChild.textContent,tableIndex);
+    // console.log("listOptions:",listOptions.children, listoptions., listOptions.firstChild.nodeType, listOptions.firstChild.textContent);
     // listOptions.querySelectorAll('li');
 
+    let isNestedList = hasChildElementAsAnotherList(listOptions);
+
+    
+  if(isNestedList)
+  {  
     const question = listOptions.firstChild.textContent;
     let options = []; // Array of Question options
     let correctOption = null; // Correction option string
     let correctOptionIndex = null; // correct option array index
 
     // Iterating over the question options
-    listOptions.querySelectorAll('li').forEach((item, index) =>{
-        // Check if the question option is bold or not
-        // Bold means it is the correct option
-        // setting the correction option and its array index
-        isBold = isOptionBold(item);
-        if(isBold) {
-          correctOption = item.textContent;
-          correctOptionIndex = index;
+    listOptions.querySelectorAll("li").forEach((item, index) => {
+      // Check if the question option is bold or not
+      // Bold means it is the correct option
+      // setting the correction option and its array index
+      isBold = isOptionBold(item);
+      if (isBold) {
+        correctOption = item.textContent;
+        correctOptionIndex = index;
+      }
+      // console.log("isBold", isBold);
+      // console.log("item:", item.textContent);
+      // appending the question options in an array
+      options.push(item.textContent);
+    });
 
-        };
-        // console.log("isBold", isBold);
-        // console.log("item:", item.textContent);
-        // appending the question options in an array
-        options.push(item.textContent);
-
-    })
-    
     // Appending the question, its options and correct response to an array of jsons
     response.push({
       title: question,
       options: options,
       correctOption: correctOption,
-      correctOptionIndex: correctOptionIndex
+      correctOptionIndex: correctOptionIndex,
     });
+  }
+  else{
+    console.log("isNestedList",isNestedList)
+    const text = listOptions.textContent;
+    let question = null;
+    let options = []; // Array of Question options
+    let correctOption = null; // Correction option string
+    let correctOptionIndex = null; // correct option array index
     
+let splitQuestionAndOptions = text
+        .split("a)")
+        .join(",")
+        .split("b)")
+        .join(",")
+        .split("c)")
+        .join(",")
+        .split("d)")
+        .join(",")
+        .split(",")
+    console.log("splitQuestionAndOptions", splitQuestionAndOptions);
+    question = splitQuestionAndOptions.shift().trim();
+    console.log("question", question);
+    options = splitQuestionAndOptions.map((options) => options.trim());
+    console.log("options", options);
+    if (listOptions.children && listOptions.children.length > 0) {
+      // console.log("elm.children[0].tagName.toLowerCase()",elm.children[0].tagName.toLowerCase())
+      if (listOptions.children[0].tagName.toLowerCase() == "strong") {
+        console.log("strong")
+        correctOption = listOptions.children[0].textContent
+        correctOption = options.find(option => correctOption.includes(option))
+        correctOptionIndex = options.findIndex(option => option.includes(correctOption))
+      }
+
+    }
+    else{
+        console.log("listOptions.children[0].textContent",listOptions.style.background)
+    }
+    console.log("correctOption", correctOption);
+    console.log("correctOptionIndex", correctOptionIndex);
+
+    response.push({
+      title: question,
+      options: options,
+      correctOption: correctOption,
+      correctOptionIndex: correctOptionIndex,
+    });
+
+
+  }
   });
 
   // console.log("response",response)
@@ -128,24 +177,33 @@ function generateJson(html) {
 
 // Checking if the question option is bold or not
 function isOptionBold(item) {
-
   // console.log("item.nodeType",item.nodeType);
 
   //https://www.w3schools.com/jsref/prop_node_nodetype.asp
   // If the node is an element node, the nodeType property will return 1.
   // Check if the option is of node type (not text type)
-  if(item.nodeType === 1){
+  if (item.nodeType === 1) {
     // Check if the child option is also of node type (not text type)
-  if(item.firstChild.nodeType === 1){
+    if (item.firstChild.nodeType === 1) {
       // console.log("sel.firstChild",item.firstChild.tagName);
 
-    // item.firstChild.tagName
-    var tag = item.firstChild.tagName.toLowerCase();
-    return ["strong", "b"].some((boldTag) => boldTag == tag)
-  }
+      // item.firstChild.tagName
+      var tag = item.firstChild.tagName.toLowerCase();
+      return ["strong", "b"].some((boldTag) => boldTag == tag);
+    }
   }
   return false;
+}
 
+function hasChildElementAsAnotherList(elm) {
+
+    if (elm.children && elm.children.length > 0) {
+        console.log("elm.children[0].tagName.toLowerCase()",elm.children.length)
+        if(elm.children[0].tagName.toLowerCase() == 'ol'){
+          return true
+        }
+    }
+   return false
 }
 
 //* Location of your input docx
