@@ -3,19 +3,20 @@ import { JSDOM } from "jsdom";
 import  generateExcelFile  from "./src/generateExcel.js";
 import generateJsonFromNestedList from "./src/nestedList.js";
 import generateJsonFromNonNestedList from "./src/unNestedList.js";
+import K from "./src/constants.js";
 
 //#region MAIN
-async function convertWordOrderedListToJson(inputDoc, outputDoc) {
+async function convertWordOrderedListToJson() {
   try {
     //* convert the input docx to html
-    const html = await mammoth.convertToHtml({ path: inputDoc });
+    const html = await mammoth.convertToHtml({ path: K.INPUT_PATH });
 
     //* creating the json using the html
     const json = generateJson(html.value);
     // console.log("tables", json);
 
 
-    return generateExcelFile(json, outputDoc);
+    return generateExcelFile(json);
     
   } catch (error) {
     console.error("Error: ", error);
