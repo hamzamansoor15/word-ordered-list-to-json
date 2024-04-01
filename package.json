@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Give word document as input, extract ordered list and get json as output",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
