@@ -2,6 +2,7 @@ import mammoth from"mammoth";
 import { JSDOM } from "jsdom";
 import  generateExcelFile  from "./src/generateExcel.js";
 import generateJsonFromNestedList from "./src/nestedList.js";
+import generateJsonFromNonNestedList from "./src/unNestedList.js";
 
 //#region MAIN
 async function convertWordOrderedListToJson(inputDoc, outputDoc) {
@@ -59,50 +60,11 @@ function generateJson(html) {
     response.push(questionOptions);
   }
   else{
-    console.log("isNestedList",isNestedList)
-    const text = listOptions.textContent;
-    let question = null;
-    let options = []; // Array of Question options
-    let correctOption = null; // Correction option string
-    let correctOptionIndex = null; // correct option array index
-    
-let splitQuestionAndOptions = text
-        .split("A)")
-        .join(",")
-        .split("B)")
-        .join(",")
-        .split("C)")
-        .join(",")
-        .split("D)")
-        .join(",")
-        .split(",")
-    console.log("splitQuestionAndOptions", splitQuestionAndOptions);
-    question = splitQuestionAndOptions.shift().trim();
-    // console.log("question", question);
-    options = splitQuestionAndOptions.map((options) => options.trim());
-    // console.log("options", options);
-    if (listOptions.children && listOptions.children.length > 0) {
-      // console.log("elm.children[0].tagName.toLowerCase()",elm.children[0].tagName.toLowerCase())
-      if (listOptions.children[0].tagName.toLowerCase() == "strong") {
-        // console.log("strong")
-        correctOption = listOptions.children[0].textContent
-        correctOption = options.find(option => correctOption.includes(option))
-        correctOptionIndex = options.findIndex(option => option.includes(correctOption))
-      }
 
-    }
-    else{
-        console.log("listOptions.children[0].textContent",listOptions.style.background)
-    }
-    console.log("correctOption", correctOption);
-    console.log("correctOptionIndex", correctOptionIndex);
+   let questionOptions = generateJsonFromNonNestedList(listOptions);
 
-    response.push({
-      title: question,
-      options: options,
-      correctOption: correctOption,
-      correctOptionIndex: correctOptionIndex,
-    });
+
+    response.push(questionOptions);
 
 
   }
