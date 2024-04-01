@@ -1,4 +1,5 @@
 
+// 1.What is one of the primary reasons why concrete is commonly chosen as a building material in construction? A) Aesthetic appeal B) Cost-effectiveness C) Strength and versatility D) Energy efficiency
 
 let generateJsonFromNonNestedList = (listOptions) => {
   const text = listOptions.textContent;

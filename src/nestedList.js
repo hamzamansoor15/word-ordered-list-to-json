@@ -1,6 +1,13 @@
 import isOptionBold from "./helper.js";
 
 
+// 4.What is a key element of human resource planning?
+//     a.Project management
+//     b.Customer service
+//     c.Workforce forecasting
+//     d.Financial analysis
+
+
 let generateJsonFromNestedList = (listOptions) => {
   const question = listOptions.firstChild.textContent;
   let options = []; // Array of Question options
